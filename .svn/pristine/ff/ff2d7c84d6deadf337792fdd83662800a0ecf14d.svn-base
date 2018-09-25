@@ -1,0 +1,128 @@
+package pdg2_ll45.controller;
+
+import java.awt.EventQueue;
+import java.util.List;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+import pdg2_ll45.model.*;
+import pdg2_ll45.view.*;
+
+/**
+ * Controller for the over-arching ChatApp (controller of the main MVC in the ChatApp)
+ */
+public class MainController implements IMainController {
+
+	/**
+	 * The model for the main MVC
+	 */
+	private IMainModel mainModel;
+
+	/**
+	 * The view for the main MVC
+	 */
+	private IMainView mainView;
+
+	/**
+	 * Constructor for the main controller
+	 */
+	public MainController() {
+		mainModel = new MainModel(new IMainModel2ViewAdapter() {
+
+			public void addText(String text) {
+				System.out.println(text);
+			}
+
+			public void addNewChatroomView(IChatroomView view) {
+				mainView.addChatroomView(view);
+			}
+
+			@Override
+			public void removeChatroom(IChatroomView view) {
+				mainView.removeCurrentChatroom(view);
+			}
+
+			@Override
+			public void addAvailableChatroom(IChatroom chatroom) {
+				mainView.addAvailableChatroom(chatroom);
+			}
+
+			@Override
+			public void addUser(IUser user) {
+				mainView.addUser(user);
+			}
+
+			@Override
+			public void addJoinedChatroom(IChatroom chatroom) {
+				mainView.addJoinedChatroom(chatroom);
+			}
+
+			@Override
+			public void removeChatroomCbx(IChatroom chatroom) {
+				mainView.removeChatroomCbx(chatroom);
+			}
+
+		});
+
+		mainView = new MainView(new IMainView2ModelAdapter() {
+
+			@Override
+			public void connectToUser(String ip) {
+				mainModel.connect(ip);
+			}
+
+			@Override
+			public IChatroom addChatroom(String name) {
+				return mainModel.installNewChatroom(name);
+			}
+
+			@Override
+			public void requestUserChatrooms(IUser user) {
+				mainModel.requestUserChatrooms(user);
+			}
+
+			@Override
+			public void joinChatroom(IChatroom chatroom) {
+				System.out.println("joining chatroom " + chatroom.toString());
+				mainModel.joinChatroom(chatroom);
+
+			}
+
+			@Override
+			public void inviteUser(IUser user, IChatroom chatroom) {
+				mainModel.inviteUser(user, chatroom);
+				mainView.addJoinedChatroom(chatroom);
+			}
+
+			@Override
+			public void stopChatApp() {
+				mainModel.stop();
+			}
+
+		});
+	}
+
+	/**
+	 * Start the main controller
+	 */
+	public void start() {
+		mainModel.start();
+		mainView.start();
+	}
+
+	/**
+	 * Main method for the main controller
+	 * @param args		args for the main method
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(() -> {
+			try {
+				final MainController controller = new MainController(); // instantiate the system
+				controller.start(); // start the system
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
+		});
+	}
+
+}

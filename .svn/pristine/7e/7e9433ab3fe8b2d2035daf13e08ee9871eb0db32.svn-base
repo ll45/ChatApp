@@ -1,0 +1,50 @@
+package pdg2_ll45.messages.chatroom;
+
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.util.function.Supplier;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+
+import common.api.chatroom.AChatroomDPAlgoCmd;
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.chatroom.ICmd2ModelAdapter;
+import common.api.user.AUserDPAlgoCmd;
+import provided.datapacket.ADataPacket;
+import provided.extvisitor.IExtVisitorHost;
+
+final class ImgSupplier implements Supplier<JComponent> {
+
+	private JComponent comp;
+	
+	public ImgSupplier(JComponent comp) {
+		this.comp = comp;
+	}
+	
+	@Override
+	public JComponent get() {
+		return comp;
+	}
+	
+}
+
+public class ImageMsgCmd extends AChatroomDPAlgoCmd<ImageMsg> {
+	private static final long serialVersionUID = 2472025231781681283L;
+	private ICmd2ModelAdapter adpt;
+
+	public ImageMsgCmd(ICmd2ModelAdapter adpt) {
+		this.setCmd2ModelAdpt(adpt);
+	}
+	
+	@Override
+	public Void apply(Class<?> index, ChatroomDataPacket<ImageMsg> host, Void... params) {
+		BufferedImage image = host.getData().getImage();
+		JLabel picLabel = new JLabel(new ImageIcon(image));
+		System.out.println("model adpt null " + (this.getCmd2ModelAdpt() == null));
+		this.getCmd2ModelAdpt().buildComponent(new ImgSupplier(picLabel));
+		return null;
+	}
+
+}

@@ -1,0 +1,285 @@
+package pdg2_ll45.view;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+
+import javax.swing.JTabbedPane;
+import javax.swing.JComboBox;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
+
+import pdg2_ll45.view.ChatroomView;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+
+/**
+ * ChatApp GUI. The main view for the overarching chat application.
+ */
+public class MainView extends JFrame implements IMainView {
+
+	/**
+	 * View2ModelAdapter for main MVC
+	 */
+	private IMainView2ModelAdapter view2ModelAdpt;
+
+	/**
+	 * List of chatroom views
+	 */
+	private List<IChatroomView> chatroomViews;
+
+	/**
+	 * Text field to enter IP address of remote user
+	 */
+	private JTextField txtIpAddress;
+
+	/**
+	 * Text field to enter name of chatroom to create
+	 */
+	private JTextField txtCreate;
+
+	/**
+	 * Tab panel to toggle between chatrooms
+	 */
+	private JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+
+	/**
+	 * Drop down of available users
+	 */
+	private JComboBox<IUser> cbxAvailUsers = new JComboBox<IUser>();
+
+	/**
+	 * Drop down of available chatrooms
+	 */
+	private JComboBox<IChatroom> cbxAvailChatrooms = new JComboBox<IChatroom>();
+
+	/**
+	 * Drop down of joined chatrooms
+	 */
+	private JComboBox cbxJoinedChatrooms = new JComboBox();
+
+	/**
+	 * Constructor for ChatApp GUI
+	 * @param view2ModelAdpt		the view to model adapter
+	 */
+	public MainView(IMainView2ModelAdapter view2ModelAdpt) {
+		this.view2ModelAdpt = view2ModelAdpt;
+		this.chatroomViews = new ArrayList<IChatroomView>();
+		addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                view2ModelAdpt.stopChatApp();
+            }
+        });
+		initGUI();
+	}
+
+	/**
+	 * Initialize the GUI
+	 */
+	public void initGUI() {
+		JPanel panel = new JPanel();
+		panel.setToolTipText("North panel of utilities");
+		getContentPane().add(panel, BorderLayout.NORTH);
+		tabbedPane.setToolTipText("Tabbed panel of current chatrooms");
+		getContentPane().add(tabbedPane, BorderLayout.CENTER);
+		JPanel panelConnect = new JPanel();
+		panelConnect.setToolTipText("Panel involving connections");
+		JPanel panelCreate = new JPanel();
+		panelCreate.setToolTipText("Panel of chatroom creation ability");
+		panelCreate.setLayout(new GridLayout(0, 1, 0, 0));
+
+		txtCreate = new JTextField();
+		txtCreate.setToolTipText("Enter chatroom name to create");
+		txtCreate.setText("Chatroom Name");
+		panelCreate.add(txtCreate);
+		txtCreate.setColumns(10);
+
+		JButton btnCreateChatroom = new JButton("Create Chatroom");
+		btnCreateChatroom.setToolTipText("Click to create chatroom");
+		panelCreate.add(btnCreateChatroom);
+		btnCreateChatroom.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				IChatroom newRoom = view2ModelAdpt.addChatroom(txtCreate.getText());
+				addJoinedChatroom(newRoom);
+			}
+		});
+
+		JLabel lblJoinedChats = new JLabel("Joined Chatrooms");
+		lblJoinedChats.setToolTipText("Label for drop down of joined chatrooms ");
+		panelCreate.add(lblJoinedChats);
+		cbxJoinedChatrooms.setToolTipText("Drop down of joined chatrooms");
+
+		panelCreate.add(cbxJoinedChatrooms);
+
+		JButton btnQuit = new JButton("Quit");
+		btnQuit.setToolTipText("Click to quit ChatApp");
+		panelConnect.add(btnQuit);
+
+		txtIpAddress = new JTextField();
+		txtIpAddress.setToolTipText("Enter remote user IP");
+		panelConnect.add(txtIpAddress);
+		txtIpAddress.setText("Enter User IP");
+		txtIpAddress.setColumns(10);
+
+		JButton btnConnect = new JButton("Connect");
+		btnConnect.setToolTipText("Click to connect");
+		panelConnect.add(btnConnect);
+		btnConnect.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				view2ModelAdpt.connectToUser(txtIpAddress.getText());
+			}
+		});
+		panel.setLayout(new GridLayout(0, 4, 0, 0));
+		panel.add(panelConnect);
+		panel.add(panelCreate);
+
+		JPanel panelAvailable = new JPanel();
+		panelAvailable.setToolTipText("Panel displaying availabilities");
+		panel.add(panelAvailable);
+		panelAvailable.setLayout(new GridLayout(2, 1, 0, 0));
+
+		JPanel panelAvailUsers = new JPanel();
+		panelAvailUsers.setToolTipText("Panel displaying available users");
+		panelAvailable.add(panelAvailUsers);
+		panelAvailUsers.setLayout(new GridLayout(2, 1, 0, 0));
+
+		JLabel lblConnectedUsers = new JLabel("Connected Users");
+		lblConnectedUsers.setToolTipText("Label for drop down of available users");
+		panelAvailUsers.add(lblConnectedUsers);
+
+		cbxAvailUsers.setToolTipText("Dropdown of all connected users.");
+		panelAvailUsers.add(cbxAvailUsers);
+
+		JPanel panelAvailChatrooms = new JPanel();
+		panelAvailable.add(panelAvailChatrooms);
+		panelAvailChatrooms.setLayout(new GridLayout(2, 1, 0, 0));
+
+		JLabel lblAvailableChatrooms = new JLabel("Available Chatrooms");
+		lblAvailableChatrooms.setToolTipText("Label for drop down of available chatrooms");
+		panelAvailChatrooms.add(lblAvailableChatrooms);
+		cbxAvailChatrooms.setToolTipText("Dropdown for available chatrooms");
+
+		panelAvailChatrooms.add(cbxAvailChatrooms);
+
+		JPanel panelJoinAdd = new JPanel();
+		panelJoinAdd.setToolTipText("Panel 4");
+		panel.add(panelJoinAdd);
+		panelJoinAdd.setLayout(new GridLayout(4, 1, 0, 0));
+
+		JButton btnJoin = new JButton("Join");
+		btnJoin.setToolTipText("Click to join chatroom");
+		panelJoinAdd.add(btnJoin);
+		btnJoin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				view2ModelAdpt.joinChatroom((IChatroom) cbxAvailChatrooms.getSelectedItem());
+				//				addChatroom(ChatroomView.getSplitPane(), txtCreate.getText());
+				addJoinedChatroom((IChatroom) cbxAvailChatrooms.getSelectedItem());
+			}
+		});
+
+		JButton btnInvite = new JButton("Invite");
+		btnInvite.setToolTipText("Click to invite user");
+		panelJoinAdd.add(btnInvite);
+		btnInvite.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				view2ModelAdpt.inviteUser((IUser) cbxAvailUsers.getSelectedItem(),
+						(IChatroom) cbxJoinedChatrooms.getSelectedItem());
+			}
+		});
+
+		JButton btnRequest = new JButton("Request Avail. Chatrooms");
+		btnRequest.setToolTipText("Click to request available chatrooms");
+		panelJoinAdd.add(btnRequest);
+		btnRequest.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				view2ModelAdpt.requestUserChatrooms((IUser) cbxAvailUsers.getSelectedItem());
+			}
+		});
+
+	}
+
+	/**
+	 * Start the GUI
+	 */
+	public void start() {
+		this.setVisible(true);
+	}
+
+	/**
+	 * Adds new chatroom to the tabbed pane
+	 * @param content		the panel to be added to the tabbed pane
+	 * @param chatroomName		name of the chatroom to be displayed on the tab
+	 */
+	public void addNewTab(Container content, String chatroomName) {
+		tabbedPane.addTab(chatroomName, content);
+	}
+
+	/**
+	 * Adds chatroom view
+	 * @param view		an IChatroom view
+	 */
+	public void addChatroomView(IChatroomView view) {
+		chatroomViews.add(view);
+		addNewTab(view.getSplitPane(), view.toString());
+	}
+
+	/**
+	 * Inserts the user to the drop down of available users
+	 * @param user		an IUser to add
+	 */
+	@Override
+	public void addUser(IUser user) {
+		cbxAvailUsers.insertItemAt(user, 0);
+
+	}
+
+	/**
+	 * Inserts the chatroom to the drop down of available chatrooms
+	 * @param chatroom		an IChatroom to add
+	 */
+	@Override
+	public void addAvailableChatroom(IChatroom chatroom) {
+		cbxAvailChatrooms.insertItemAt(chatroom, 0);
+	}
+
+	/**];
+	 * 
+	 * Inserts the chatroom to the drop down of already joined chatrooms
+	 * @param chatroom		an IChatroom to add
+	 */
+	public void addJoinedChatroom(IChatroom chatroom) {
+		cbxJoinedChatrooms.insertItemAt(chatroom, 0);
+	}
+
+	/**
+	 * Removes the current chatroom tabs and chatroom view
+	 * @param chatroomview 		IChatroomView to remove
+	 */
+	@Override
+	public void removeCurrentChatroom(IChatroomView chatroomView) {
+		tabbedPane.remove(tabbedPane.getSelectedIndex());
+		chatroomViews.remove(chatroomView);
+	}
+
+	/**
+	 * Removes chatroom from joined chatrooms drop down list upon leaving a chatroom
+	 * @param chatroom 			IChatroom user left 
+	 */
+	@Override
+	public void removeChatroomCbx(IChatroom chatroom) {
+		cbxJoinedChatrooms.removeItem(chatroom);
+	}
+}

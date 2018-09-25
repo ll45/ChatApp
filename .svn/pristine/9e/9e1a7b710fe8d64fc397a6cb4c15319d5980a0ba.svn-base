@@ -1,0 +1,101 @@
+package pdg2_ll45.model;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.chatroom.IChatroom;
+import common.api.chatroom.IMsgReceiver;
+import common.api.message.chatroom.IChatroomMsg;
+
+/**
+ * Class of basic chatroom. Implements IChatroom.
+ */
+public class BasicChatroom implements IChatroom {
+
+	/**
+	 * Serializable ID
+	 */
+	private static final long serialVersionUID = -6945717527437278919L;
+
+	/**
+	 * UUID of chatroom
+	 */
+	private UUID uuid;
+
+	/**
+	 * List of message receiver stubs
+	 */
+	private List<IMsgReceiver> receivers = new ArrayList<IMsgReceiver>();
+
+	/**
+	 * Name of chatroom
+	 */
+	private String name;
+
+	/**
+	 * Constructor for a basic chatroom 
+	 * @param name		String name of the chatroom
+	 */
+	public BasicChatroom(String name) {
+		this.name = name;
+		this.uuid = UUID.randomUUID();
+	}
+
+	/**
+	 * Get name of chatroom 
+	 * @return name of chatroom
+	 */
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Gets UUID of chatroom
+	 * @return UUID of chatroom
+	 */
+	@Override
+	public UUID getUUID() {
+		return uuid;
+	}
+
+	/**
+	 * Gets message receivers
+	 * @return List of message receiver stubs
+	 */
+	@Override
+	public List<IMsgReceiver> getMsgReceivers() {
+		return receivers;
+	}
+
+	/**
+	 * Adds a message receiver to list of message receivers
+	 */
+	public void addReceiver(IMsgReceiver receiver) {
+		receivers.add(receiver);
+	}
+
+	/**
+	 * Removes a message recevier from the list of message receivers
+	 */
+	public void removeReceiver(IMsgReceiver receiver) {
+		receivers.remove(receiver);
+	}
+
+	/**
+	 * Notifies all receivers with message
+	 * @param message of chatroom data packet type
+	 */
+	@Override
+	public void notifyAllReceivers(ChatroomDataPacket<? extends IChatroomMsg> message) throws RemoteException {
+		System.out.println("Sending the following message: " + message);
+		System.out.println("Receivers who will receive: " + receivers.toString());
+		for (IMsgReceiver receiver : receivers) {
+			receiver.receive(message);
+		}
+	}
+
+}

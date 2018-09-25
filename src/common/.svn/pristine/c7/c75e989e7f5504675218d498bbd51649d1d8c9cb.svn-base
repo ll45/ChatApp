@@ -1,0 +1,12 @@
+package common.api.message.chatroom;
+
+import common.api.message.shared.IFailure;
+
+/**
+ * The message that denotes a failed IChatroomMsg. A typed version of the IFailure message.
+ * 
+ * @author Chatapp Design Group E
+ *
+ */
+public interface IFailedChatroomMsg extends IFailure<IChatroomMsg>, IChatroomMsg {
+}

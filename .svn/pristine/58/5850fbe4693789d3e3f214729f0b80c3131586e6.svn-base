@@ -1,0 +1,320 @@
+package pdg2_ll45.model;
+
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.rmi.AccessException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.chatroom.IChatroom;
+import common.api.chatroom.IMsgReceiver;
+import common.api.message.chatroom.IAdd;
+import common.api.message.chatroom.IChatroomMsg;
+import common.api.message.chatroom.IQuit;
+import common.api.message.user.IAvailableChatrooms;
+import common.api.message.user.IDisconnect;
+import common.api.message.user.IFailedUserMsg;
+import common.api.message.user.IJoinInvite;
+import common.api.message.user.IRequestChatrooms;
+import common.api.message.user.IUserMsg;
+import common.api.user.AUserDPAlgoCmd;
+import common.api.user.IUser;
+import common.api.user.UserDPAlgo;
+import common.api.user.UserDataPacket;
+import pdg2_ll45.controller.*;
+import pdg2_ll45.messages.chatroom.Add;
+import pdg2_ll45.messages.chatroom.Quit;
+import pdg2_ll45.messages.user.*;
+import provided.datapacket.DataPacket;
+import provided.datapacket.DataPacketAlgo;
+import provided.rmiUtils.IRMIUtils;
+import provided.rmiUtils.IRMI_Defs;
+import provided.rmiUtils.RMIUtils;
+
+public class MainModel implements IMainModel {
+
+	private IRMIUtils rmiUtils;
+	private String localAddress;
+	private IUser user;
+	private IUser userStub;
+	private UserDPAlgo userMsgVisitor;
+
+	/**
+	 * Connected users
+	 */
+	private List<IUser> connectedUsers;
+	private IMainModel2ViewAdapter model2ViewAdpt;
+	private List<IChatroomModel> chatroomModels;
+	private List<IChatroom> availableChatrooms;
+
+	public MainModel(IMainModel2ViewAdapter model2ViewAdpt) {
+		this.model2ViewAdpt = model2ViewAdpt;
+		final class DefaultAlgoCmd extends AUserDPAlgoCmd<IUserMsg> {
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IUserMsg> host, Void... params) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+		}
+		this.userMsgVisitor = new UserDPAlgo(new DefaultAlgoCmd());
+		connectedUsers = new ArrayList<IUser>();
+		chatroomModels = new ArrayList<IChatroomModel>();
+		availableChatrooms = new ArrayList<IChatroom>();
+		initUserMsgVisitor();
+	}
+
+	private void initUserMsgVisitor() {
+		userMsgVisitor.setCmd(IDisconnect.class, new AUserDPAlgoCmd<IDisconnect>() {
+			private static final long serialVersionUID = -2750048585996495692L;
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IDisconnect> host, Void... params) {
+				connectedUsers.remove(host.getSender());
+				return null;
+			}
+
+		});
+		userMsgVisitor.setCmd(IFailedUserMsg.class, new AUserDPAlgoCmd<IFailedUserMsg>() {
+			private static final long serialVersionUID = 743442274260469872L;
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IFailedUserMsg> host, Void... params) {
+				System.out.println("Failed user message: " + host.getData().getErrorMessage());
+				return null;
+			}
+
+		});
+		userMsgVisitor.setCmd(IJoinInvite.class, new AUserDPAlgoCmd<IJoinInvite>() {
+			private static final long serialVersionUID = -5447183781973234634L;
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IJoinInvite> host, Void... params) {
+				IChatroom chatroom = host.getData().getChatroom();
+				joinChatroom(chatroom);
+				model2ViewAdpt.addJoinedChatroom(chatroom);
+				return null;
+			}
+
+		});
+		userMsgVisitor.setCmd(IRequestChatrooms.class, new AUserDPAlgoCmd<IRequestChatrooms>() {
+			private static final long serialVersionUID = -2401267101607709387L;
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IRequestChatrooms> host, Void... params) {
+				List<IChatroom> chatrooms = chatroomModels.stream().map(chatroomModel -> chatroomModel.getChatroom())
+						.collect(Collectors.toList());
+				IUser asker = host.getSender();
+				try {
+					IAvailableChatrooms msg = new AvailableChatrooms(chatrooms);
+					asker.accept(new UserDataPacket<IAvailableChatrooms>(IAvailableChatrooms.class, msg, userStub));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return null;
+			}
+
+		});
+		userMsgVisitor.setCmd(IAvailableChatrooms.class, new AUserDPAlgoCmd<IAvailableChatrooms>() {
+			private static final long serialVersionUID = 7331490826497854042L;
+
+			@Override
+			public Void apply(Class<?> index, UserDataPacket<IAvailableChatrooms> host, Void... params) {
+				for (IChatroom chatroom : host.getData().getChatrooms()) {
+					if (!(containsChatroom(availableChatrooms, chatroom))) {
+						availableChatrooms.add(chatroom);
+						model2ViewAdpt.addAvailableChatroom(chatroom);
+					}
+
+				}
+				return null;
+			}
+
+		});
+
+	}
+
+	private boolean containsChatroom(List<IChatroom> chatrooms, IChatroom chatroom) {
+		for (IChatroom room : chatrooms) {
+			if (room.getUUID().equals(chatroom.getUUID())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public String connect(String _ip) {
+		String ip = _ip.trim();
+		Registry registry = rmiUtils.getRemoteRegistry(ip);
+		System.out.println(registry.toString());
+		try {
+			IUser connect = (IUser) registry.lookup(IUser.BOUND_NAME);
+			addUser(connect);
+			System.out.println("Connected to " + ip + " successfully.");
+			return "Connected to " + ip + " successfully.";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Exception connecting to " + ip + ": " + e + "\n";
+		}
+	}
+
+	public void stop() {
+		try {
+			// Leave all current chatrooms
+			for (IChatroomModel chatroomModel : chatroomModels) {
+				IChatroom chatroom = chatroomModel.getChatroom();
+				chatroom.notifyAllReceivers(
+						new ChatroomDataPacket<Quit>(Quit.class, new Quit(), chatroomModel.getReceiverStub()));
+			}
+			// Disconnect from all users
+			for (IUser connectedUser : connectedUsers) {
+				connectedUser.accept(new UserDataPacket<IDisconnect>(IDisconnect.class, new Disconnect(), userStub));
+			}
+			// Kill the application
+			rmiUtils.stopRMI();
+			System.exit(0);
+		} catch (Exception e) {
+			System.exit(-1);
+		}
+	}
+
+	public void start() {
+		this.rmiUtils = new RMIUtils(model2ViewAdpt::addText);
+		rmiUtils.startRMI(IRMI_Defs.CLASS_SERVER_PORT_CLIENT);
+
+		final class User implements IUser {
+			@Override
+			public String getName() throws RemoteException {
+				return "pdg2_ll45";
+			}
+
+			@Override
+			public void registerUser(IUser user) throws RemoteException {
+				addUser(user);
+				System.out.println("Registered user: " + user.getName());
+			}
+
+			@Override
+			public void accept(UserDataPacket<? extends IUserMsg> message) throws RemoteException {
+				message.execute(userMsgVisitor, (Void[]) null);
+			}
+		}
+
+		this.user = new User();
+		try {
+			localAddress = rmiUtils.getLocalAddress();
+		} catch (SocketException | UnknownHostException e) {
+			System.out.println("Error getting local address: " + e.getClass());
+			e.printStackTrace();
+		}
+
+		try {
+			userStub = (IUser) UnicastRemoteObject.exportObject(this.user, IRMI_Defs.REGISTRY_PORT);
+			rmiUtils.getLocalRegistry().bind(IUser.BOUND_NAME, userStub);
+		} catch (RemoteException | AlreadyBoundException e) {
+			System.out.println("Error creating & binding user stub: " + e.getClass());
+			e.printStackTrace();
+		}
+	}
+
+	public IChatroom installNewChatroom(String name) {
+		IChatroom newRoom = new BasicChatroom(name);
+		IChatroomModel newModel = addChatroom(newRoom);
+
+		try {
+			IMsgReceiver recvStub = newModel.getReceiverStub();
+			newModel.getChatroom().addReceiver(recvStub);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return newRoom;
+	}
+
+	public IChatroomModel addChatroom(IChatroom chatroom) {
+		IChatroomController newChatroomController = new ChatroomController(chatroom, userStub, this,
+				this.model2ViewAdpt);
+		newChatroomController.start();
+		chatroomModels.add(newChatroomController.getModel());
+		model2ViewAdpt.addNewChatroomView(newChatroomController.getView());
+		return newChatroomController.getModel();
+	}
+
+	public void joinChatroom(IChatroom chatroom) {
+		System.out.println("in join chatroom");
+		IChatroomModel newModel = addChatroom(chatroom);
+		IMsgReceiver recv = new MsgReceiver(new MsgReceiver2ChatroomModelAdapter(newModel));
+		try {
+			IMsgReceiver recvStub = (IMsgReceiver) UnicastRemoteObject.exportObject(recv, IRMI_Defs.STUB_PORT_CLIENT);
+			newModel.getChatroom().addReceiver(recvStub);
+			chatroom.notifyAllReceivers(new ChatroomDataPacket<IAdd>(IAdd.class, new Add(userStub), recv));
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void addUser(IUser _user) {
+		if (!(connectedUsers.contains(_user))) {
+			connectedUsers.add(_user);
+			try {
+				_user.registerUser(userStub);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			model2ViewAdpt.addUser(_user);
+		}
+	}
+
+	public void requestUserChatrooms(IUser user) {
+		try {
+			user.accept(new UserDataPacket<IRequestChatrooms>(IRequestChatrooms.class, new RequestChatrooms(),
+					this.userStub));
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public void removeChatroom() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void quitRoom(IChatroomModel chatroomModel) {
+		System.out.println("in quitroom in mainmodel");
+		try {
+			chatroomModel.getReceiverStub()
+					.receive(new ChatroomDataPacket<IQuit>(IQuit.class, new Quit(), chatroomModel.getReceiverStub()));
+			chatroomModel.getChatroom().notifyAllReceivers(
+					new ChatroomDataPacket<IQuit>(IQuit.class, new Quit(), chatroomModel.getReceiverStub()));
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+		chatroomModels.remove(chatroomModel);
+		model2ViewAdpt.removeChatroomCbx(chatroomModel.getChatroom());
+	}
+
+	@Override
+	public void inviteUser(IUser user, IChatroom chatroom) {
+		try {
+			user.accept(new UserDataPacket<IJoinInvite>(IJoinInvite.class, new JoinInvite(chatroom), this.userStub));
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+}

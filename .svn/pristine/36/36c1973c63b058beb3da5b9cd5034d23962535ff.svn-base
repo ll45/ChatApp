@@ -1,0 +1,51 @@
+package pdg2_ll45.view;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+
+/**
+ * Interface for the over-arching ChatApp (the main view)
+ */
+public interface IMainView {
+
+	/**
+	 * Start the GUI
+	 */
+	public void start();
+
+	/**
+	 * Adds chatroom view
+	 * @param view		an IChatroom view
+	 */
+	public void addChatroomView(IChatroomView view);
+
+	/**
+	 * Inserts the user to the drop down of available users
+	 * @param user		an IUser to add
+	 */
+	public void addUser(IUser user);
+
+	/**
+	 * Inserts the chatroom to the drop down of already joined chatrooms
+	 * @param chatroom		an IChatroom to add
+	 */
+	public void addJoinedChatroom(IChatroom chatroom);
+
+	/**
+	 * Inserts the chatroom to the drop down of available users
+	 * @param chatroom		an IChatroom to add
+	 */
+	public void addAvailableChatroom(IChatroom chatroom);
+
+	/**
+	 * Remove a chatroom view from the list of current chatroom views.
+	 * @param chatroomView the chatroom view to remove
+	 */
+	public void removeCurrentChatroom(IChatroomView chatroomView);
+
+	/**
+	 * Remove chatroom from drop down of joined chatrooms upon leaving chatroom
+	 * @param chatroom		IChatroom that user left
+	 */
+	public void removeChatroomCbx(IChatroom chatroom);
+}

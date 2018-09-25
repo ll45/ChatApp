@@ -1,0 +1,24 @@
+package common.api.message.user;
+
+import common.api.chatroom.IChatroom;
+
+/**
+ * This message is sent to a user who is to be invited to join a specific chatroom. The 
+ * message contains a serialized copy of the Chatroom object that the user may join. To 
+ * join the Chatroom, the receiving user must send an IAdd message to each IMsgReceiver
+ * in the Chatroom.
+ * 
+ * @author ChatApp Design Group E
+ *
+ */
+public interface IJoinInvite extends IUserMsg {
+	
+	/**
+	 * Gets the serialized Chatroom object from the message.
+	 * 
+	 * @return serialized Chatroom object
+	 * 
+	 */
+	public IChatroom getChatroom();
+
+}

@@ -1,0 +1,38 @@
+package pdg2_ll45.messages.user;
+
+import common.api.chatroom.IChatroom;
+import common.api.message.user.IJoinInvite;
+
+/**
+ * Class involving join invites. Implements IJoinInvite.
+ */
+public class JoinInvite implements IJoinInvite {
+	
+	/**
+	 * Serializable ID
+	 */
+	private static final long serialVersionUID = -5602064447472709396L;
+	
+	/**
+	 * The chatroom to invite to
+	 */
+	private IChatroom chatroom; 
+	
+	/**
+	 * Constructor for a join invite
+	 * @param chatroom		Chatroom to invite to
+	 */
+	public JoinInvite(IChatroom chatroom) {
+		this.chatroom = chatroom;
+	}
+	
+	/**
+	 * Gets chatroom to invite to
+	 * @return chatroom		A chatroom to be invited to
+	 */
+	@Override
+	public IChatroom getChatroom() {
+		return chatroom;
+	}
+
+}

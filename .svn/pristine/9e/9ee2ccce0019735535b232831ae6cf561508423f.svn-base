@@ -1,0 +1,253 @@
+package pdg2_ll45.model;
+
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
+import java.rmi.UnknownHostException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+import javax.imageio.ImageIO;
+import javax.swing.JComponent;
+
+import common.api.chatroom.*;
+import common.api.message.chatroom.IAdd;
+import common.api.message.chatroom.IChatroomMsg;
+import common.api.message.chatroom.IFailedChatroomMsg;
+import common.api.message.chatroom.IAddCmd;
+import common.api.message.chatroom.IGetCmd;
+import common.api.message.chatroom.IQuit;
+import common.api.message.chatroom.IStringMsg;
+import common.api.message.user.IUserMsg;
+import common.api.user.IUser;
+import common.api.user.UserDataPacket;
+import pdg2_ll45.messages.chatroom.AddCmd;
+import pdg2_ll45.messages.chatroom.GetCmd;
+import pdg2_ll45.messages.chatroom.ImageMsg;
+import pdg2_ll45.messages.chatroom.ImageMsgCmd;
+import pdg2_ll45.messages.chatroom.StringMsg;
+import provided.datapacket.ADataPacket;
+import provided.datapacket.DataPacket;
+import provided.datapacket.DataPacketAlgo;
+import provided.extvisitor.IExtVisitorCmd;
+import provided.extvisitor.IExtVisitorHost;
+import provided.rmiUtils.IRMIUtils;
+import provided.rmiUtils.IRMI_Defs;
+import provided.rmiUtils.RMIUtils;
+
+public class ChatroomModel implements IChatroomModel {
+
+	private IChatroomModel2ViewAdapter model2ViewAdapter;
+	private IChatroomModel2MainModelAdapter chatroom2MainAdapter;
+	private IChatroom chatroom;
+
+	private UUID chatroomID;
+	private String chatName;
+	private String localAddress;
+	private IUser user;
+	private IMsgReceiver ownReceiver;
+	private IMsgReceiver chatroomStub;
+	private IRMIUtils rmiUtils;
+	private HashMap<Class<? extends IChatroomMsg>, ChatroomDataPacket<IChatroomMsg>> unknownMessages = new HashMap<Class<? extends IChatroomMsg>, ChatroomDataPacket<IChatroomMsg>>();
+
+	private ICmd2ModelAdapter cmd2ModelAdapter = new ICmd2ModelAdapter() {
+
+		@Override
+		public void buildComponent(Supplier<JComponent> component) {
+			model2ViewAdapter.buildComponent(component);
+		}
+
+		@Override
+		public void appendString(String message) {
+			model2ViewAdapter.appendString(message);
+		}
+
+	};
+
+	private ChatroomDPAlgo dataPacketAlgo = new ChatroomDPAlgo(new AChatroomDPAlgoCmd<IChatroomMsg>() {
+
+		// Default method sends an IGetCmd request. 
+		@Override
+		public Void apply(Class<?> index, ChatroomDataPacket<IChatroomMsg> host, Void... params) {
+			IMsgReceiver sender = host.getSender();
+			try {
+
+				unknownMessages.put(host.getData().getClass(), host);
+				System.out.println("unknown type: " + host.getData().getClass());
+				sender.receive(new ChatroomDataPacket<IGetCmd>(IGetCmd.class, new GetCmd(host.getData().getClass()),
+						chatroomStub));
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}
+
+	});
+
+	public ChatroomModel(IChatroom chatroom, IChatroomModel2ViewAdapter model2ViewAdapter,
+			IChatroomModel2MainModelAdapter chatroom2MainAdapter, IUser user) {
+		this.chatroom = chatroom;
+		this.model2ViewAdapter = model2ViewAdapter;
+		this.chatroom2MainAdapter = chatroom2MainAdapter;
+		this.user = user;
+
+		//Initialize DataPacketAlgo
+		initDataPacketAlgo();
+	}
+
+	public void initDataPacketAlgo() {
+		dataPacketAlgo.setCmd(IStringMsg.class, new AChatroomDPAlgoCmd<IStringMsg>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IStringMsg> host, Void... params) {
+				IStringMsg msg = host.getData();
+				model2ViewAdapter.addText(msg.getContent());
+				return null;
+			}
+
+		});
+		dataPacketAlgo.setCmd(IFailedChatroomMsg.class, new AChatroomDPAlgoCmd<IFailedChatroomMsg>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IFailedChatroomMsg> host, Void... params) {
+				model2ViewAdapter.addText("Failed chatroom message: " + host.getData().getErrorMessage());
+				return null;
+			}
+
+		});
+		dataPacketAlgo.setCmd(IAdd.class, new AChatroomDPAlgoCmd<IAdd>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IAdd> host, Void... params) {
+				IMsgReceiver sender = host.getSender();
+				IUser userStub = host.getData().getUserStub();
+				if (!chatroom.getMsgReceivers().contains(sender)) {
+					chatroom.addReceiver(sender);
+				}
+				chatroom2MainAdapter.addUser(userStub);
+				System.out.println("added user to chatroom, users: " + chatroom.getMsgReceivers().toString());
+				return null;
+			}
+
+		});
+		dataPacketAlgo.setCmd(IGetCmd.class, new AChatroomDPAlgoCmd<IGetCmd>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IGetCmd> host, Void... params) {
+				IMsgReceiver sender = host.getSender();
+				Class<? extends IChatroomMsg> unknownClass = host.getData().getClassIndex();
+				@SuppressWarnings("unchecked")
+				AddCmd cmd = new AddCmd(
+						(AChatroomDPAlgoCmd<? extends IChatroomMsg>) dataPacketAlgo.getCmd(unknownClass), unknownClass);
+				ChatroomDataPacket<IAddCmd> message = new ChatroomDataPacket<IAddCmd>(IAddCmd.class, cmd, chatroomStub);
+				try {
+					sender.receive(message);
+				} catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return null;
+			}
+
+		});
+		dataPacketAlgo.setCmd(IAddCmd.class, new AChatroomDPAlgoCmd<IAddCmd>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IAddCmd> host, Void... params) {
+				dataPacketAlgo.setCmd(host.getData().getClassIndex(), host.getData().getCmd());
+				host.getData().getCmd().setCmd2ModelAdpt(cmd2ModelAdapter);
+				ChatroomDataPacket<? extends IChatroomMsg> unknownMsg = unknownMessages
+						.get(host.getData().getClassIndex());
+				if (unknownMsg == null)
+					return null;
+				System.out.println("Processing for type: " + unknownMsg.getData().getClass());
+				unknownMsg.execute(dataPacketAlgo, (Void[]) null);
+				return null;
+			}
+
+		});
+		dataPacketAlgo.setCmd(IQuit.class, new AChatroomDPAlgoCmd<IQuit>() {
+
+			@Override
+			public Void apply(Class<?> index, ChatroomDataPacket<IQuit> host, Void... params) {
+				System.out.println("in quit command");
+				System.out.println("before remove, num receivers: " + chatroom.getMsgReceivers().size());
+				System.out.println("receivers contains us: " + chatroom.getMsgReceivers().contains(host.getSender()));
+				chatroom.removeReceiver(host.getSender());
+				System.out.println("after remove, num receivers: " + chatroom.getMsgReceivers().size());
+				return null;
+			}
+		});
+		dataPacketAlgo.setCmd(ImageMsg.class, new ImageMsgCmd(cmd2ModelAdapter));
+	}
+
+	public void start() {
+
+		ownReceiver = new IMsgReceiver() {
+			public void receive(ChatroomDataPacket<? extends IChatroomMsg> message) throws RemoteException {
+				message.execute(dataPacketAlgo, (Void[]) null);
+				System.out.println("Received packet: " + message.toString());
+			}
+		};
+
+		try {
+			chatroomStub = (IMsgReceiver) UnicastRemoteObject.exportObject(this.ownReceiver, IRMI_Defs.REGISTRY_PORT);
+		} catch (RemoteException e) {
+			System.out.println("Error creating & binding user stub: " + e.getClass());
+			e.printStackTrace();
+		}
+
+	}
+
+	public void sendMessage(String message) {
+		try {
+			chatroom.notifyAllReceivers(
+					new ChatroomDataPacket<IStringMsg>(IStringMsg.class, new StringMsg(message), chatroomStub));
+		} catch (RemoteException e) {
+			System.out.println("Error handling string message.");
+			e.printStackTrace();
+		}
+	}
+
+	public void sendImage() {
+		try {
+			BufferedImage img = null;
+			try {
+				img = ImageIO.read(new File("calabiyau4C.png"));
+			} catch (IOException e) {
+			}
+			chatroom.notifyAllReceivers(
+					new ChatroomDataPacket<ImageMsg>(ImageMsg.class, new ImageMsg(img), chatroomStub));
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public IMsgReceiver getReceiverStub() {
+		return chatroomStub;
+	}
+
+	public IChatroom getChatroom() {
+		return chatroom;
+	}
+
+	@Override
+	public void quitRoom() {
+		chatroom2MainAdapter.quitRoom();
+	}
+
+	@Override
+	public void executeMessage(ChatroomDataPacket<? extends IChatroomMsg> message) {
+		message.execute(dataPacketAlgo, (Void[]) null);
+	}
+}

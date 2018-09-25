@@ -1,0 +1,38 @@
+package pdg2_ll45.messages.chatroom;
+
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.IOException;
+import java.io.Serializable;
+
+import javax.imageio.ImageIO;
+
+import common.api.message.chatroom.IChatroomMsg;
+
+public class ImageMsg implements IChatroomMsg, java.io.Serializable {
+	private static final long serialVersionUID = -5795148088383727239L;
+	private transient BufferedImage image;
+	
+	public ImageMsg(BufferedImage image) {
+		this.image = image;
+	}
+	
+    private void writeObject(java.io.ObjectOutputStream stream)
+            throws IOException {
+    	stream.defaultWriteObject();
+        ImageIO.write(image, "png", stream);
+    }
+
+    private void readObject(java.io.ObjectInputStream stream)
+            throws IOException, ClassNotFoundException {
+    	stream.defaultReadObject();
+    	image = ImageIO.read(stream);
+    }
+
+	
+	public BufferedImage getImage() {
+		return image;
+	}
+	
+}

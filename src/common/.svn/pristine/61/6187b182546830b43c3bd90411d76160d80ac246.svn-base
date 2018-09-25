@@ -1,0 +1,30 @@
+package common.api.chatroom;
+
+import common.api.message.chatroom.IChatroomMsg;
+import provided.datapacket.DataPacketAlgo;
+
+/**
+ * @author ChatApp Design Group E
+ * 
+ * An abstract class for the chatroom-level visitor that accepts and processes datapackets
+ * containing IChatroomMsgs. 
+ *
+ */
+public class ChatroomDPAlgo extends DataPacketAlgo<Void, Void> {
+
+	/**
+	 * Serial ID.
+	 */
+	private static final long serialVersionUID = -7168869552420953088L;
+
+	/**
+	 * Constructor for the visitor.
+	 * 
+	 * @param defaultCmd
+	 * 		default command to execute for the visitor
+	 */
+	public ChatroomDPAlgo(AChatroomDPAlgoCmd<? extends IChatroomMsg> defaultCmd) {
+		super(defaultCmd);
+	}
+
+}

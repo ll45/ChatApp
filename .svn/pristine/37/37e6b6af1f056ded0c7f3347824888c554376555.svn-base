@@ -1,0 +1,36 @@
+package pdg2_ll45.messages.user;
+
+import java.io.Serializable;
+import java.util.List;
+
+import common.api.chatroom.IChatroom;
+import common.api.message.user.IAvailableChatrooms;
+
+/**
+ * Class of serializable available chatrooms. Implements IAvailableChatrooms.
+ */
+public class AvailableChatrooms implements IAvailableChatrooms, Serializable {
+	
+	/**
+	 * List of chatrooms
+	 */
+	private List<IChatroom> chatrooms;
+	
+	/**
+	 * Constructor for available chatrooms
+	 * @param chatrooms		a list of chatrooms that are available
+	 */
+	public AvailableChatrooms(List<IChatroom> chatrooms) {
+		this.chatrooms = chatrooms;
+	}
+	
+	/**
+	 * Gets available chatrooms
+	 * @return chatrooms		List of available chatrooms
+	 */
+	@Override
+	public List<IChatroom> getChatrooms() {
+		return chatrooms;
+	}
+
+}

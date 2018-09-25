@@ -1,0 +1,80 @@
+package pdg2_ll45.model;
+
+import java.util.List;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+
+/**
+ * Interface for the main model in the over-arching ChatApp MVC
+ */
+public interface IMainModel {
+	
+	/**
+	 * Start the model
+	 */
+	public void start();
+	
+	/**
+	 * Connect to remote user
+	 * @param ip		IP address of remote user
+	 * @return String regarding connection
+	 */
+	public String connect(String ip);
+
+	/**
+	 * Installs a new chatroom
+	 * @param name		name of the new chatroom
+	 * @return a new chatroom
+	 */
+	public IChatroom installNewChatroom(String name);
+
+	/**
+	 * Adds a new chatroom
+	 * @param chatroom		the chatroom to be added
+	 * @return a chatroom model
+	 */
+	public IChatroomModel addChatroom(IChatroom chatroom);
+
+	/**
+	 * Quits a chatroom 
+	 * @param chatroomModel 		model of the chatroom to be left
+	 */
+	public void quitRoom(IChatroomModel chatroomModel);
+
+	/**
+	 * Adds a new user
+	 * @param user		the user to be added
+	 */
+	public void addUser(IUser user);
+
+	/**
+	 * Requests the available chatrooms of a user
+	 * @param user		user that is being requested from
+	 */
+	public void requestUserChatrooms(IUser user);
+
+	/**
+	 * Removes a chatroom
+	 */
+	public void removeChatroom();
+
+	/**
+	 * Joins a chatroom
+	 * @param chatroom		chatroom that user intends to join
+	 */
+	public void joinChatroom(IChatroom chatroom);
+
+	/**
+	 * Invite a remote user
+	 * @param user		remote user to send invite to
+	 * @param chatroom		the chatroom to invite user to 
+	 */
+	public void inviteUser(IUser user, IChatroom chatroom);
+
+	/**
+	 * Stops chatroom
+	 */
+	public void stop();
+
+}

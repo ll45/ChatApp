@@ -1,0 +1,15 @@
+package pdg2_ll45.messages.chatroom;
+
+import common.api.message.chatroom.IQuit;
+
+/**
+ * Class to quit chatroom
+ */
+public class Quit implements IQuit {
+	
+	/**
+	 * Serializable ID
+	 */
+	private static final long serialVersionUID = 7317985964253144080L;
+
+}

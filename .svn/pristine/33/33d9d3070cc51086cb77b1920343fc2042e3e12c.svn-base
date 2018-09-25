@@ -1,0 +1,51 @@
+package pdg2_ll45.model;
+
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.chatroom.IChatroom;
+import common.api.chatroom.IMsgReceiver;
+import common.api.message.chatroom.IChatroomMsg;
+
+/**
+ * The chatroom model interface
+ */
+public interface IChatroomModel {
+	
+	/**
+	 * Start the chatroom model
+	 */
+	public void start();
+
+	/**
+	 * Send message to remote user
+	 * @param message		String to be sent
+	 */
+	public void sendMessage(String message);
+	
+	/**
+	 * Quit the chatroom
+	 */
+	public void quitRoom();
+	
+	/**
+	 * Gets the message receiver stub
+	 * @return a message receiver stub
+	 */
+	public IMsgReceiver getReceiverStub();
+	
+	/**
+	 * Gets the chatroom
+	 * @return a chatroom
+	 */
+	public IChatroom getChatroom();
+	
+	/**
+	 * Executes a message
+	 * @param message		message to be executed
+	 */
+	public void executeMessage(ChatroomDataPacket<? extends IChatroomMsg> message);
+	
+	/**
+	 * Sends an image
+	 */
+	public void sendImage();
+}

@@ -1,0 +1,10 @@
+package pdg2_ll45.messages.user;
+
+import common.api.message.user.IRequestChatrooms;
+
+/**
+ * Class to request chatrooms from remote user. Implements IRequestChatrooms.
+ */
+public class RequestChatrooms implements IRequestChatrooms {
+
+}

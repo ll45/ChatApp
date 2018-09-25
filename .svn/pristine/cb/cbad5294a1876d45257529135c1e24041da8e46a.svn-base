@@ -1,0 +1,42 @@
+package pdg2_ll45.model;
+
+import java.rmi.RemoteException;
+
+import common.api.chatroom.AChatroomDPAlgoCmd;
+import common.api.chatroom.ChatroomDPAlgo;
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.chatroom.IMsgReceiver;
+import common.api.message.chatroom.IChatroomMsg;
+import common.api.message.chatroom.IGetCmd;
+import pdg2_ll45.messages.chatroom.GetCmd;
+
+public class StandardDPAlgo extends ChatroomDPAlgo {
+
+	public StandardDPAlgo() {
+		super(null);
+		//		super(new AChatroomDPAlgoCmd<IChatroomMsg>() {
+		//			private static final long serialVersionUID = -1762773499162340299L;
+		//
+		//			// Default method sends an IGetCmd request. 
+		//			@Override
+		//			public Void apply(Class<?> index, ChatroomDataPacket<IChatroomMsg> host, Void... params) {
+		//				IMsgReceiver sender = host.getSender();
+		//				try {
+		//					sender.receive(new ChatroomDataPacket<IGetCmd>(
+		//							IGetCmd.class, new GetCmd(host.getData().getClass()), ownReceiver));
+		//				} catch (RemoteException e) {
+		//					// TODO Auto-generated catch block
+		//					e.printStackTrace();
+		//				}
+		//				return null;
+		//			}
+		//			
+		//		});
+		//		init();
+	}
+
+	private void init() {
+
+	}
+
+}

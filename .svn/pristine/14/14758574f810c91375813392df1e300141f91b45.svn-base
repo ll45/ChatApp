@@ -1,0 +1,49 @@
+package pdg2_ll45.view;
+
+import java.util.List;
+
+import common.api.chatroom.*;
+import common.api.user.IUser;
+
+/**
+ * Interface for the Main view to model adapter
+ */
+public interface IMainView2ModelAdapter {
+
+	/**
+	 * Connect to remote user
+	 * @param ip		String representation of the IP of remote user
+	 */
+	public void connectToUser(String ip);
+
+	/**
+	 * Adds chatroom
+	 * @param name		String name of chatroom to add
+	 * @return	an IChatroom
+	 */
+	public IChatroom addChatroom(String name);
+
+	/**
+	 * Request remote user's chatrooms
+	 * @param user		IUser to request from
+	 */
+	public void requestUserChatrooms(IUser user);
+
+	/**
+	 * Join a chatroom
+	 * @param chatroom		IChatroom to join
+	 */
+	public void joinChatroom(IChatroom chatroom);
+
+	/**
+	 * Invite a user to a specified chatroom. 
+	 * @param user		user to invite 
+	 * @param chatroom 		chatroom to invite them to
+	 */
+	public void inviteUser(IUser user, IChatroom chatroom);
+
+	/** 
+	 * Disconnects the user from all other users, leaves all chatrooms, and terminates the chat app. 
+	 */
+	public void stopChatApp();
+}

@@ -1,0 +1,51 @@
+package pdg2_ll45.messages.chatroom;
+
+import common.api.chatroom.AChatroomDPAlgoCmd;
+import common.api.message.chatroom.IAddCmd;
+import common.api.message.chatroom.IChatroomMsg;
+
+/**
+ * Class of messages is sent as a response to the receipt of an IGetCmd message
+ * Implements IAddCmd
+ */
+public class AddCmd implements IAddCmd {
+	
+	/**
+	 * A chatroom data packet algorithm
+	 */
+	private AChatroomDPAlgoCmd<? extends IChatroomMsg> cmd;
+	
+	/**
+	 * A IChatroomMsg class
+	 */
+	private Class<? extends IChatroomMsg> msgClass;
+	
+	/**
+	 * Adds the command
+	 * @param cmd		the command 
+	 * @param msgClass		the message class
+	 */
+	public AddCmd(AChatroomDPAlgoCmd<? extends IChatroomMsg> cmd, Class<? extends IChatroomMsg> msgClass) {
+		this.cmd = cmd;
+		this.msgClass = msgClass;
+	}
+	
+	/**
+	 * Gets the command
+	 * @return an AChatroomDPAlgoCmd
+	 */
+	@Override
+	public AChatroomDPAlgoCmd<? extends IChatroomMsg> getCmd() {
+		return cmd;
+	}
+
+	/**
+	 * Gets the class index
+	 * @return class of messages
+	 */
+	@Override
+	public Class<? extends IChatroomMsg> getClassIndex() {
+		return msgClass;
+	}
+
+}

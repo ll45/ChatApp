@@ -1,0 +1,25 @@
+package common.api.message.user;
+
+import java.util.List;
+
+import common.api.chatroom.IChatroom;
+
+/**
+ * This message is sent as a response to the receipt of an IRequestChatrooms message.
+ * It contains a list of serialized IChatroom objects. The user may then choose one 
+ * to join locally.
+ * 
+ * @author ChatApp Design Group E
+ *
+ */
+public interface IAvailableChatrooms extends IUserMsg {
+	
+	/**
+	 * Gets the list of chatroom objects
+	 * 
+	 * @return list of chatroom objects
+	 * 
+	 */
+	public List<IChatroom> getChatrooms();
+
+}

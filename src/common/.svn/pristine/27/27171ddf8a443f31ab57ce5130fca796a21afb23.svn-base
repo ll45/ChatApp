@@ -1,0 +1,131 @@
+package common.api.chatroom;
+
+import java.io.Serializable;
+import java.rmi.RemoteException;
+import java.util.List;
+import java.util.UUID;
+
+import common.api.message.chatroom.IChatroomMsg;
+
+/**
+ * An interface that represents a single Chatroom object.
+ * 
+ * A Chatroom object is simply a collection of IMsgReceiver stubs. Any IMsgReceiver stub
+ * is tied to the mini-MVC containing that Chatroom object on a remote user's system, and
+ * the IMsgReceiver may be used by the Chatroom object on the local user's system to 
+ * communicate with the Chatroom object on the remote user's system.
+ * 
+ * <p>
+ * 1. CREATING a Chatroom
+ * <p>
+ *    > A Chatroom object is created locally and tied to a unique identifier (UID). This
+ *      object is serializable.
+ * <p>
+ *    > This action is NOT PART OF THE API! It is merely noted here for reference 
+ *      purposes.
+ * <p>
+ *    
+ * 2. JOINING a Chatroom
+ * <p>
+ * 	  > There are two possible methods for joining a chatroom:
+ * 
+ * 		- INVITING a user to join
+ * 			The local user inviting the remote user to join a chatroom they're part of must
+ * 			send the remote user an IJoinInvite message. This message contains a serialized copy
+ * 			of the Chatroom object that the remote user can then create a mini-MVC for. The 
+ * 			remote user may choose to decline this invitation.
+ * 		
+ * 		- REQUESTING to join
+ * 			The user wishing to join must send an IJoinRequest message to any user already in the
+ * 			chatroom. This IJoinRequest is tied to the chatroom's UID. If the receiver chooses
+ * 			to accept the join request, they respond with an IJoinInvite message containing the serialized
+ * 			Chatroom object. The join request may be declined.
+ * 		
+ * <p>
+ * 	  > Upon receipt of the IJoinInvite message, a user may send an IAddUser message to all IMsgReceivers in the
+ * 		chatroom. The IAddUser message contains an IMsgReceiver stub tied to the local mini-MVC representing that
+ * 		chatroom. All users then simply add this IMsgReceiver stub to their instance of the serialized chatroom.
+ * 
+ *    > After joining, the user automatically exchanges IUser stubs with all other users in that chatroom.
+ *      This ensures all users are directly connected to each other, and one user leaving the chatroom will
+ *      not disconnect anyone else.
+ * <p>
+ *    
+ * 3. LEAVING a Chatroom
+ * <p>
+ *    > Any user who wishes to leave this chatroom simply sends an IQuit message to all IMsgReceivers
+ *      in the chatroom. This deletes the user's IMsgReceiver stub from all copies of the Chatroom object. 
+ *      The user can then delete their copy of the Chatroom object.
+ * <p>
+ * 
+ * 4. DELETING a Chatroom
+ * <p>
+ *    > A Chatroom should be automatically deleted once all users have left that chatroom (there are no more IMsgReceivers
+ *      still in the chatroom).
+ *    > This action is NOT part of the API! It is noted here merely for reference purposes.
+ *    
+ * @author ChatApp Design Group E
+ * 
+ */
+public interface IChatroom extends Serializable {
+	
+	/**
+	 * Gets the (non-unique) name of the chatroom. 
+	 * <p>
+	 * 
+	 * Each Chatroom has a name that users will see when finding chatrooms to connect
+	 * to. This name is NOT unique.
+	 * <p>
+	 * 
+	 * @return name of the chatroom
+	 * 
+	 */
+	public String getName();
+	
+	/**
+	 * Gets the (unique) identifying ID of the chatroom.
+	 * <p>
+	 * 
+	 * Each Chatroom has a unique identifying ID that will be used for all internal
+	 * communication. This UID will also be seen by the user when finding chatrooms to 
+	 * connect to.
+	 * <p>
+	 * 
+	 * @return UID of the chatroom
+	 * 
+	 */
+	public UUID getUUID();
+	
+	/**
+	 * Gets the list of current message receivers in the chatroom.
+	 * <p>
+	 * 
+	 * Each Chatroom maintains a list of current IMsgReceivers that any remote user can query
+	 * at any time.
+	 * <p>
+	 * 
+	 * @return A list of IMsgReceiver objects representing the receivers to this chatroom.
+	 */
+	public List<IMsgReceiver> getMsgReceivers();
+	
+	
+	/** Notifies and forwards the message to all receivers.  Will call receive() on each IMsgReceiver.
+	 * 
+	 * @param message 
+	 * 		the Message to send to all receivers.
+	 * 
+	 * @throws RemoteException 
+	 * 		in case an error occurs during network transmission
+	 */
+	public void notifyAllReceivers(ChatroomDataPacket<? extends IChatroomMsg> message) throws RemoteException;
+
+	/** Adds a specific IMsgReceiver to the internal collections of IMsgReceivers to notify.
+	 * @param receiver the Receiver to add to the list of message receivers.
+	 */
+	public void addReceiver(IMsgReceiver receiver);
+
+	/** Deletes a specific IMsgReceiver from the internal collections of IMsgReceivers to notify.
+	 * @param receiver the Receiver to remove from the list of message receivers.
+	 */
+	public void removeReceiver(IMsgReceiver receiver);
+}

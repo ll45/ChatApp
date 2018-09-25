@@ -1,0 +1,24 @@
+package pdg2_ll45.view;
+
+/**
+ * Interface for the Chatroom view to model adapter
+ */
+public interface IChatroomView2ModelAdapter {
+
+	/**
+	 * Sends message
+	 * @param message		String to send
+	 */
+	public void sendMessage(String message);
+
+	/**
+	 * Sends a default image to everyone in the chat.
+	 */
+	public void sendImage();
+
+	/**
+	 * Quit the chatroom
+	 */
+	public void quitRoom();
+
+}

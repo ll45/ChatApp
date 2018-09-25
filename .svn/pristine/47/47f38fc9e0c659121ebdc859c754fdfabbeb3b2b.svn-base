@@ -1,0 +1,34 @@
+package pdg2_ll45.messages.user;
+
+import java.io.Serializable;
+
+import common.api.chatroom.ChatroomDataPacket;
+import common.api.message.chatroom.IChatroomMsg;
+import pdg2_ll45.model.IChatroomModel;
+
+/**
+ * Class of message recevier to model adapter
+ */
+public class MsgReceiver2ChatroomModelAdapter {
+	
+	/**
+	 * The chatroom model
+	 */
+	private IChatroomModel model;
+	
+	/**
+	 * Constructor for message receiver to chatroom model adapter
+	 * @param model		the chatroom model
+	 */
+	public MsgReceiver2ChatroomModelAdapter(IChatroomModel model) {
+		this.model = model;
+	}
+
+	/**
+	 * Execute a message
+	 * @param message		a chatroom data packet to exeute
+	 */
+	public void executeMessage(ChatroomDataPacket<? extends IChatroomMsg> message) {
+		model.executeMessage(message);
+	}
+}

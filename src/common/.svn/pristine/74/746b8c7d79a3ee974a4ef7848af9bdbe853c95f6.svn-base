@@ -1,0 +1,6 @@
+/**
+ * Contains interfaces for interacting with Chatrooms, including IChatroom (the 
+ * actual chatroom object itself) and IMsgReceiver (the adapter that allows a user
+ * to communicate with a remote Chatroom object). 
+ */
+package common.api.chatroom;

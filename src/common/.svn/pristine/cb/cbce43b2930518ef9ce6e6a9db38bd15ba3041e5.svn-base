@@ -1,0 +1,13 @@
+package common.api.message.chatroom;
+
+/**
+ * This message is sent to a chatroom by a user who wishes to leave the chatroom. The chatroom
+ * and all its remote instances should delete that user's IMsgReceiver stub from their copy of
+ * the chatroom. Since no information aside from the sender of this message is required, this
+ * interface has no methods.
+ * 
+ * @author ChatApp Design Group E
+ *
+ */
+public interface IQuit extends IChatroomMsg {
+}

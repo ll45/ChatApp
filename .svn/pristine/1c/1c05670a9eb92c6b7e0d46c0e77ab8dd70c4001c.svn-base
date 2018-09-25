@@ -1,0 +1,6 @@
+package pdg2_ll45.view;
+
+public interface IChatroomView2MainViewAdapter {
+
+	public void removeChatroomView(IChatroomView chatroomView);
+}

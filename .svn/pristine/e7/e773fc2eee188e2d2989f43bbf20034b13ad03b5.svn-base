@@ -1,0 +1,32 @@
+package pdg2_ll45.model;
+
+import java.util.List;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+
+public interface IMainModel {
+
+	public void start();
+
+	public String connect(String ip);
+
+	public IChatroom installNewChatroom(String name);
+
+	public IChatroomModel addChatroom(IChatroom chatroom);
+
+	public void quitRoom(IChatroomModel chatroomModel);
+
+	public void addUser(IUser user);
+
+	public void requestUserChatrooms(IUser user);
+
+	public void removeChatroom();
+
+	public void joinChatroom(IChatroom chatroom);
+
+	public void inviteUser(IUser user, IChatroom chatroom);
+
+	public void stop();
+
+}

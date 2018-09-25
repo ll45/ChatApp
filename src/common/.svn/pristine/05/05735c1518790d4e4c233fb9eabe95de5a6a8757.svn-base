@@ -1,0 +1,36 @@
+package common.api.chatroom;
+
+import common.api.message.chatroom.IChatroomMsg;
+
+import provided.datapacket.DataPacket;
+
+/**
+ * @author ChatApp Design Group E
+ * 
+ * Type-narrowed version of a datapacket that can only contain IChatroomMsgs.
+ *
+ * @param <T> the type of message sent through ChatroomDataPackets
+ * 		Type parameter that extends IChatroomMsg
+ */
+public class ChatroomDataPacket<T extends IChatroomMsg> extends DataPacket<T, IMsgReceiver> {
+
+	/**
+	 * Unique serial version UID.
+	 */
+	private static final long serialVersionUID = -8211117048701378374L;
+
+	/**
+	 * Constructor for the chatroom datapacket.
+	 * 
+	 * @param c
+	 * 		class of the message that's being sent
+	 * @param data
+	 * 		message that's being sent
+	 * @param sender
+	 * 		sender of the datapacket (should be an IMsgReceiver stub) 
+	 */
+	public ChatroomDataPacket(Class<T> c, T data, IMsgReceiver sender) {
+		super(c, data, sender);
+	}
+
+}

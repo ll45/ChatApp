@@ -1,0 +1,125 @@
+package pdg2_ll45.controller;
+
+import java.util.function.Supplier;
+
+import javax.swing.JComponent;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.*;
+import pdg2_ll45.model.*;
+import pdg2_ll45.view.*;
+
+/**
+ * Controller for the chatroom (controller of the mini MVC in the ChatApp)
+ */
+public class ChatroomController implements IChatroomController {
+
+	/**
+	 * The chatroom model for the chatroom MVC
+	 */
+	private IChatroomModel chatroomModel;
+
+	/**
+	 * the chatroom view for the chatroom MVC
+	 */
+	private IChatroomView chatroomView;
+
+	/**
+	 * Constructor for the Chatroom controller
+	 * @param chatroom		an IChatroom
+	 * @param user		an IUser
+	 * @param mainModel		the main chatroomModel 
+	 */
+	public ChatroomController(IChatroom chatroom, IUser user, IMainModel mainModel,
+			IMainModel2ViewAdapter mainViewAdpt) {
+		chatroomModel = new ChatroomModel(chatroom, new IChatroomModel2ViewAdapter() {
+
+			public void addText(String text) {
+				chatroomView.appendText(text);
+				System.out.println(text);
+			}
+
+			@Override
+			public void buildComponent(Supplier<JComponent> component) {
+				chatroomView.buildComponent(component);
+
+			}
+
+			@Override
+			public void appendString(String message) {
+				chatroomView.appendText(message);
+
+			}
+
+			@Override
+			public void removeView() {
+				System.out.println("removing self");
+				chatroomView.removeSelf();
+			}
+
+		}, new IChatroomModel2MainModelAdapter() {
+
+			@Override
+			public void addUser(IUser _user) {
+				mainModel.addUser(_user);
+			}
+
+			@Override
+			public void quitRoom() {
+				mainModel.quitRoom(chatroomModel);
+			}
+
+		}, user);
+		chatroomView = new ChatroomView(new IChatroomView2ModelAdapter() {
+
+			@Override
+			public void sendMessage(String message) {
+				chatroomModel.sendMessage(message);
+			}
+
+			@Override
+			public void quitRoom() {
+				chatroomModel.quitRoom();
+			}
+
+			@Override
+			public void sendImage() {
+				chatroomModel.sendImage();
+			}
+
+		}, new IChatroomView2MainViewAdapter() {
+
+			@Override
+			public void removeChatroomView(IChatroomView chatroomView) {
+				mainViewAdpt.removeChatroom(chatroomView);
+			}
+
+		});
+	}
+
+	/**
+	 * Start the controller
+	 */
+	public void start() {
+		chatroomModel.start();
+		chatroomView.start();
+	}
+
+	/**
+	 * Get the chatroom chatroomModel
+	 * @return the IChatroomModel
+	 */
+	@Override
+	public IChatroomModel getModel() {
+		return chatroomModel;
+	}
+
+	/**
+	 * Get the chatroom chatroomView
+	 * @return the IChatroomView
+	 */
+	@Override
+	public IChatroomView getView() {
+		return chatroomView;
+	}
+}

@@ -1,0 +1,53 @@
+package pdg2_ll45.model;
+
+import common.api.chatroom.IChatroom;
+import common.api.user.IUser;
+import pdg2_ll45.view.*;
+
+/**
+ * Interface for the main model to view adapter
+ */
+public interface IMainModel2ViewAdapter {
+	
+	/**
+	 * Adds text
+	 * @param text		String text to add
+	 */
+	public void addText(String text);
+
+	/**
+	 * Adds new chatroom view
+	 * @param view		view to be added
+	 */
+	public void addNewChatroomView(IChatroomView view);
+
+	/**
+	 * Add chatroom to available chatrooms drop down
+	 * @param chatroom		chatroom to be added to available chatroom drop down
+	 */
+	public void addAvailableChatroom(IChatroom chatroom);
+
+	/**
+	 * Add chatroom to joined chatrooms drop down
+	 * @param chatroom		chatroom to be added to joined chatrooms drop down
+	 */
+	public void addJoinedChatroom(IChatroom chatroom);
+
+	/**
+	 * Removes chatroom from the view
+	 * @param view		chatroom to be removed
+	 */
+	public void removeChatroom(IChatroomView view);
+
+	/**
+	 * Adds a remote user
+	 * @param user		remote user to be added
+	 */
+	public void addUser(IUser user);
+
+	/**
+	 * Remove a chatroom from the chatroom drop down 
+	 * @param chatroom		chatroom to be removed
+	 */
+	public void removeChatroomCbx(IChatroom chatroom);
+}

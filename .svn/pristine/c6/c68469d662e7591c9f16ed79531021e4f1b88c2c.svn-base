@@ -1,0 +1,20 @@
+package pdg2_ll45.model;
+
+import common.api.user.IUser;
+
+/**
+ * Interface for the chatroom model to main model adapter
+ */
+public interface IChatroomModel2MainModelAdapter {
+	
+	/**
+	 * Adds new user
+	 * @param user		user to be added
+	 */
+	public void addUser(IUser user);
+	
+	/**
+	 * Quits a chatroom
+	 */
+	public void quitRoom();
+}
